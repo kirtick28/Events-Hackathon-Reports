@@ -84,6 +84,7 @@ import StaffStudentDetails from './pages/staff/advisor/StudentDetails';
 import StaffProofVerification from './pages/staff/advisor/ProofVerification';
 import StaffClassReports from './pages/staff/advisor/ClassReports';
 import StaffPastClassData from './pages/staff/advisor/PastClassData';
+import HomePage from './pages/auth/HomePage';
 
 const RedirectIfLoggedIn = ({ children }) => {
   const { user } = useAuth();
@@ -109,6 +110,8 @@ const App = () => (
 
       <Routes>
         {/* Auth */}
+        <Route path="/home" element={<HomePage />} />
+
         <Route
           path="/login"
           element={
@@ -287,7 +290,7 @@ const App = () => (
           <Route path="events" element={<StaffEvents />} />
           <Route path="mentored-teams" element={<StaffMentoredTeams />} />
           {/* Student Management */}
-          <Route path="students">
+          {/* <Route path="students">
             <Route path=":deptId/:classId">
               <Route index element={<StaffClassStudents />} />
               <Route path=":studentId" element={<StaffStudentDetails />} />
@@ -301,7 +304,24 @@ const App = () => (
               />
             </Route>
             <Route path="past-data" element={<StaffPastClassData />} />
-          </Route>
+          </Route> */}
+          <Route
+            path="students/:deptId/:classId"
+            element={<StaffClassStudents />}
+          />
+          <Route
+            path="students/:deptId/:classId/:studentId"
+            element={<StaffStudentDetails />}
+          />
+          <Route
+            path="students/:deptId/:classId/:studentId/reports"
+            element={<StaffClassReports />}
+          />
+          <Route
+            path="students/:deptId/:classId/:studentId/proofs"
+            element={<StaffProofVerification />}
+          />
+          <Route path="students/past-data" element={<StaffPastClassData />} />
         </Route>
 
         {/* Other roles… */}
