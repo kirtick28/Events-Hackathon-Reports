@@ -26,8 +26,9 @@ const EventCard = ({ event, onView, onEdit }) => {
       : event.description;
 
   // Check if user can edit the event
-  const canEdit = user.role === 'innovation' || 
-                 (user.role !== 'innovation' && user._id === event.createdBy?._id);
+  const canEdit =
+    user.role === 'innovation' ||
+    (user.role !== 'innovation' && user._id === event.createdBy?._id);
 
   return (
     <motion.div
@@ -38,7 +39,7 @@ const EventCard = ({ event, onView, onEdit }) => {
     >
       {/* Gradient Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-yellow-50 to-blue-50 opacity-50" />
-      
+
       {/* Content */}
       <div className="relative p-6 flex flex-col h-full">
         {/* Header */}
@@ -47,10 +48,13 @@ const EventCard = ({ event, onView, onEdit }) => {
             <h3 className="text-2xl font-bold text-gray-800 mb-1">
               {event.title}
             </h3>
-            <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${
-              eventTypeColors[event.type] || 'bg-gray-100 text-gray-700'
-            }`}>
-              {event.type?.charAt(0).toUpperCase() + event.type?.slice(1) || 'Event'}
+            <span
+              className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${
+                eventTypeColors[event.type] || 'bg-gray-100 text-gray-700'
+              }`}
+            >
+              {event.type?.charAt(0).toUpperCase() + event.type?.slice(1) ||
+                'Event'}
             </span>
           </div>
           {canEdit && event.status === 'approved' && (
@@ -112,11 +116,36 @@ const EventCard = ({ event, onView, onEdit }) => {
           </div>
         </div>
 
+        {/* Registration Status */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between">
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-medium ${
+                event.isRegistrationOpen || event.registrationStatus === 'open'
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-red-100 text-red-700'
+              }`}
+            >
+              {event.isRegistrationOpen || event.registrationStatus === 'open'
+                ? 'Registration Open'
+                : 'Registration Closed'}
+            </span>
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <DocumentTextIcon className="h-4 w-4" />
+              <span>
+                Deadline:{' '}
+                {event.registrationDeadline
+                  ? new Date(event.registrationDeadline).toLocaleDateString()
+                  : new Date(event.startDate).toLocaleDateString()}
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Footer */}
         <div className="mt-auto flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <DocumentTextIcon className="h-4 w-4" />
-            <span>Deadline: {new Date(event.registrationDeadline).toLocaleDateString()}</span>
+          <div className="text-sm text-gray-500">
+            <span>Event Status: {event.eventStatus || 'Upcoming'}</span>
           </div>
           <motion.button
             whileHover={{ scale: 1.02 }}

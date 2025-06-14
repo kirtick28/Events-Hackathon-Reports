@@ -63,28 +63,103 @@ exports.createEvent = async (req, res) => {
  */
 exports.getAllEvents = async (req, res) => {
   try {
-    const { status, createdBy } = req.query;
+    const { status, createdBy, category } = req.query;
+    const now = new Date();
 
     // Build dynamic filter object
-    const filter = {};
+    let filter = {};
+
+    // If specific status is requested, use it; otherwise default to approved for general queries
     if (status) {
-      filter.status = status; // e.g., 'approved', 'pending', 'rejected'
+      filter.status = status;
+    } else if (!createdBy) {
+      filter.status = 'approved'; // Only show approved events for general public
     }
-    if (createdBy) {
-      filter.createdBy = createdBy; // MongoDB ObjectId
-    }
+
+    if (createdBy) filter.createdBy = createdBy;
 
     const events = await Event.find(filter)
       .populate('department createdBy')
-      .sort({ createdAt: -1 });
+      .sort({ startDate: 1 });
 
-    res.json(events);
+    // Add computed properties to each event
+    const eventsWithStatus = events.map((event) => {
+      const eventObj = event.toObject();
+
+      // Calculate event status based on dates
+      const startDate = new Date(event.startDate);
+      const endDate = new Date(event.endDate);
+
+      if (now < startDate) {
+        eventObj.eventStatus = 'upcoming';
+      } else if (now >= startDate && now <= endDate) {
+        eventObj.eventStatus = 'ongoing';
+      } else {
+        eventObj.eventStatus = 'completed';
+      }
+
+      // Calculate registration status
+      const registrationDeadline = event.registrationDeadline
+        ? new Date(event.registrationDeadline)
+        : startDate;
+      eventObj.isRegistrationOpen = now <= registrationDeadline;
+      eventObj.registrationStatus = eventObj.isRegistrationOpen
+        ? 'open'
+        : 'closed';
+
+      return eventObj;
+    });
+
+    // If category filter is requested, filter by event status
+    if (category) {
+      let filteredEvents;
+      switch (category) {
+        case 'ongoing':
+          filteredEvents = eventsWithStatus.filter(
+            (event) => event.eventStatus === 'ongoing'
+          );
+          break;
+        case 'upcoming':
+          filteredEvents = eventsWithStatus.filter(
+            (event) => event.eventStatus === 'upcoming'
+          );
+          break;
+        case 'past':
+        case 'completed':
+          filteredEvents = eventsWithStatus.filter(
+            (event) => event.eventStatus === 'completed'
+          );
+          break;
+        default:
+          filteredEvents = eventsWithStatus;
+          break;
+      }
+      return res.json(filteredEvents);
+    }
+
+    // For student endpoint compatibility, return categorized events
+    if (
+      req.originalUrl.includes('/students/') ||
+      req.query.categorized === 'true'
+    ) {
+      const categorizedEvents = {
+        ongoing: eventsWithStatus.filter(
+          (event) => event.eventStatus === 'ongoing'
+        ),
+        completed: eventsWithStatus.filter(
+          (event) => event.eventStatus === 'completed'
+        )
+      };
+      return res.json(categorizedEvents);
+    }
+
+    // Default: return all events with status
+    res.json(eventsWithStatus);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Fetching events failed' });
   }
 };
-
 
 /**
  * @desc    Get single event details with registration stats
@@ -144,12 +219,12 @@ exports.updateEvent = async (req, res) => {
     }
 
     const updatedData = {
-      ...req.body,
+      ...req.body
     };
 
     const updatedEvent = await Event.findByIdAndUpdate(
       req.params.eventId,
-      updatedData,
+      updatedData
     );
     res.json(updatedEvent);
   } catch (err) {
@@ -168,7 +243,10 @@ exports.deleteEvent = async (req, res) => {
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Optional: Check if the user is the creator or has required role
-    if (req.user.role !== 'innovation' && event.createdBy.toString() !== req.user.id) {
+    if (
+      req.user.role !== 'innovation' &&
+      event.createdBy.toString() !== req.user.id
+    ) {
       return res
         .status(403)
         .json({ error: 'Unauthorized to delete this event' });
@@ -188,8 +266,8 @@ exports.deleteEvent = async (req, res) => {
  */
 exports.getDraftEvents = async (req, res) => {
   try {
-    const id = req.params.id
-    const drafts = await Event.find({ status: 'draft', createdBy : id })
+    const id = req.params.id;
+    const drafts = await Event.find({ status: 'draft', createdBy: id })
       .populate('department')
       .sort({ updatedAt: -1 });
 
@@ -198,7 +276,6 @@ exports.getDraftEvents = async (req, res) => {
     res.status(500).json({ error: 'Fetching drafts failed' });
   }
 };
-
 
 /**
  * @desc    Get event registrations
@@ -252,7 +329,9 @@ exports.handleEventApproval = async (req, res) => {
 
     // Validate status
     if (!['approved', 'rejected', 'pending'].includes(status)) {
-      return res.status(400).json({ error: 'Invalid status. Must be either approved or rejected' });
+      return res
+        .status(400)
+        .json({ error: 'Invalid status. Must be either approved or rejected' });
     }
 
     // Find the event by ID
@@ -265,16 +344,18 @@ exports.handleEventApproval = async (req, res) => {
 
     // Check if the event is in pending status
     if (event.status !== 'pending' && event.status !== 'rejected') {
-      return res.status(400).json({ error: 'Event is not in pending or rejected status' });
+      return res
+        .status(400)
+        .json({ error: 'Event is not in pending or rejected status' });
     }
 
     // Update the event status
     event.status = status;
     await event.save();
 
-    res.json({ 
-      message: `Event ${status} successfully`, 
-      event 
+    res.json({
+      message: `Event ${status} successfully`,
+      event
     });
   } catch (err) {
     console.error(err);

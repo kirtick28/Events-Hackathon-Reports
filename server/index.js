@@ -30,6 +30,8 @@ app.use('/api/students', require('./routes/student'));
 app.use('/api/teams', require('./routes/teams'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/upload', require('./routes/upload'));
+app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/reports', require('./routes/reports'));
 
 // Add error middleware at the end
 const errorHandler = require('./middlewares/errorMiddleware');

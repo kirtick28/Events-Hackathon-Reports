@@ -33,9 +33,7 @@ const PendingEventCard = ({ event, onView }) => {
         </div>
 
         {/* Description */}
-        <p className="text-gray-600 mb-6 line-clamp-3">
-          {event.description}
-        </p>
+        <p className="text-gray-600 mb-6 line-clamp-3">{event.description}</p>
 
         {/* Info Grid */}
         <div className="grid grid-cols-2 gap-4 mb-6">
@@ -53,10 +51,15 @@ const PendingEventCard = ({ event, onView }) => {
               <ClockIcon className="h-4 w-4 text-blue-600" />
               <p className="text-sm text-gray-500">Status</p>
             </div>
-            <p className="text-sm font-medium text-gray-700">
-              Awaiting Review
-            </p>
+            <p className="text-sm font-medium text-gray-700">Awaiting Review</p>
           </div>
+        </div>
+
+        {/* Registration Status */}
+        <div className="mb-4">
+          <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
+            Pending Approval
+          </span>
         </div>
 
         {/* Action Button */}

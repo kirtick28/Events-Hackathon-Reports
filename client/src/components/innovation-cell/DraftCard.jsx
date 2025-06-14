@@ -10,7 +10,7 @@ const DraftEventCard = ({ event, onDelete, onEdit }) => (
   >
     {/* Gradient Background */}
     <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-blue-50 opacity-50" />
-    
+
     {/* Content */}
     <div className="relative p-6 flex flex-col h-full">
       {/* Header */}
@@ -51,6 +51,13 @@ const DraftEventCard = ({ event, onDelete, onEdit }) => (
             {new Date(event.updatedAt).toLocaleDateString()}
           </p>
         </div>
+      </div>
+
+      {/* Registration Status */}
+      <div className="mb-4">
+        <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+          Draft - Not Published
+        </span>
       </div>
 
       {/* Action Button */}

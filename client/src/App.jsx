@@ -56,7 +56,6 @@ import ICEventRequests from './pages/innovation-cell/EventManagement/EventReques
 import TeamDetails from './pages/innovation-cell/TeamManagement/TeamDetails';
 import TeamApprovals from './pages/innovation-cell/TeamManagement/TeamApprovals';
 // Innovation cell Reports Management
-import Overview from './pages/innovation-cell/Reports/Overview';
 
 // HOD pages…
 import HODDashboard from './pages/hod/Dashboard';
@@ -73,10 +72,15 @@ import HODEvents from './pages/hod/EventManagement/AllEvents';
 import HODEventRequests from './pages/hod/EventManagement/EventRequests';
 import HODEventDetails from './pages/hod/EventManagement/EventDetails';
 
+// Principal Pages
+import PrincipalDashboard from './pages/principal/Dashboard';
+import PrincipalProfile from './pages/principal/Profile';
+
 // Staff Pages
 import StaffDashboard from './pages/staff/Dashboard';
 import StaffProfile from './pages/staff/Profile';
 import StaffEvents from './pages/staff/Events';
+import StaffEventDetails from './pages/staff/EventDetails';
 import StaffMentoredTeams from './pages/staff/MentoredTeams';
 // Staff Student Management
 import StaffClassStudents from './pages/staff/advisor/ClassStudents';
@@ -85,6 +89,31 @@ import StaffProofVerification from './pages/staff/advisor/ProofVerification';
 import StaffClassReports from './pages/staff/advisor/ClassReports';
 import StaffPastClassData from './pages/staff/advisor/PastClassData';
 import HomePage from './pages/auth/HomePage';
+
+// Student Pages
+import StudentDashboard from './pages/student/Dashboard';
+import EventList from './pages/student/EventList';
+import EventDetails from './pages/student/EventDetails';
+import EventRegistration from './pages/student/EventRegistration';
+import TeamCreation from './pages/student/TeamCreation';
+import TeamManagement from './pages/student/TeamManagement';
+import TeamInvitations from './pages/student/TeamInvitations';
+import StudentTeamDetails from './pages/student/TeamDetails';
+import ProofSubmission from './pages/student/ProofSubmission';
+import PastParticipation from './pages/student/PastParticipation';
+import StudentProfile from './pages/student/Profile';
+
+// Reports Components
+import SuperAdminReports from './pages/super-admin/Reports';
+import SuperAdminUserDetailReport from './pages/super-admin/UserDetailReport';
+import InnovationCellReports from './pages/innovation-cell/Reports';
+import InnovationCellUserDetailReport from './pages/innovation-cell/UserDetailReport';
+import PrincipalReports from './pages/principal/Reports';
+import PrincipalUserDetailReport from './pages/principal/UserDetailReport';
+import HODReports from './pages/hod/Reports';
+import HODUserDetailReport from './pages/hod/UserDetailReport';
+import StaffReports from './pages/staff/Reports';
+import StaffUserDetailReport from './pages/staff/UserDetailReport';
 
 const RedirectIfLoggedIn = ({ children }) => {
   const { user } = useAuth();
@@ -170,6 +199,15 @@ const App = () => (
             </Route>
           </Route>
 
+          {/* Reports */}
+          <Route path="reports">
+            <Route index element={<SuperAdminReports />} />
+            <Route
+              path="user/:userId"
+              element={<SuperAdminUserDetailReport />}
+            />
+          </Route>
+
           <Route path="profile" element={<SuperAdminProfile />} />
           <Route path="*" element={<Navigate to="dashboard" replace />} />
         </Route>
@@ -222,7 +260,11 @@ const App = () => (
           </Route>
           {/* Reports */}
           <Route path="reports">
-            <Route index element={<Overview />} />
+            <Route index element={<InnovationCellReports />} />
+            <Route
+              path="user/:userId"
+              element={<InnovationCellUserDetailReport />}
+            />
           </Route>
           <Route path="notifications" element={<Notifications />} />
           <Route path="profile" element={<ICProfile />} />
@@ -271,6 +313,12 @@ const App = () => (
             <Route path=":eventId" element={<HODEventDetails />} />
           </Route>
 
+          {/* Reports */}
+          <Route path="reports">
+            <Route index element={<HODReports />} />
+            <Route path="user/:userId" element={<HODUserDetailReport />} />
+          </Route>
+
           <Route path="profile" element={<HODProfile />} />
           <Route path="*" element={<Navigate to="dashboard" replace />} />
         </Route>
@@ -288,7 +336,9 @@ const App = () => (
           <Route path="dashboard" element={<StaffDashboard />} />
           <Route path="profile" element={<StaffProfile />} />
           <Route path="events" element={<StaffEvents />} />
+          <Route path="events/:eventId" element={<StaffEventDetails />} />
           <Route path="mentored-teams" element={<StaffMentoredTeams />} />
+          <Route path="teams/:teamId" element={<StudentTeamDetails />} />
           {/* Student Management */}
           {/* <Route path="students">
             <Route path=":deptId/:classId">
@@ -322,9 +372,15 @@ const App = () => (
             element={<StaffProofVerification />}
           />
           <Route path="students/past-data" element={<StaffPastClassData />} />
+
+          {/* Reports */}
+          <Route path="reports">
+            <Route index element={<StaffReports />} />
+            <Route path="user/:userId" element={<StaffUserDetailReport />} />
+          </Route>
         </Route>
 
-        {/* Other roles… */}
+        {/* Principal */}
         <Route
           path="/principal"
           element={
@@ -332,8 +388,24 @@ const App = () => (
               <Principal />
             </RoleBasedRoute>
           }
-        />
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<PrincipalDashboard />} />
 
+          {/* Reports */}
+          <Route path="reports">
+            <Route index element={<PrincipalReports />} />
+            <Route
+              path="user/:userId"
+              element={<PrincipalUserDetailReport />}
+            />
+          </Route>
+
+          <Route path="profile" element={<PrincipalProfile />} />
+          <Route path="*" element={<Navigate to="dashboard" replace />} />
+        </Route>
+
+        {/* Student Routes */}
         <Route
           path="/student"
           element={
@@ -341,7 +413,27 @@ const App = () => (
               <Student />
             </RoleBasedRoute>
           }
-        />
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<StudentDashboard />} />
+          <Route path="events" element={<EventList />} />
+          <Route path="events/:eventId" element={<EventDetails />} />
+          <Route
+            path="events/:eventId/register"
+            element={<EventRegistration />}
+          />
+          <Route path="teams" element={<TeamManagement />} />
+          <Route path="teams/invitations" element={<TeamInvitations />} />
+          <Route path="teams/create/:eventId" element={<TeamCreation />} />
+          <Route path="teams/:teamId" element={<StudentTeamDetails />} />
+          <Route path="proofs" element={<ProofSubmission />} />
+          <Route path="past-participations" element={<PastParticipation />} />
+          <Route path="profile" element={<StudentProfile />} />
+          <Route
+            path="*"
+            element={<Navigate to="/student/dashboard" replace />}
+          />
+        </Route>
 
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />

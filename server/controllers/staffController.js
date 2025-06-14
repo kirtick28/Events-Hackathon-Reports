@@ -1,5 +1,35 @@
 const Team = require('../models/Team');
 const User = require('../models/User');
+const Class = require('../models/Class');
+
+// Helper function to check if staff is advisor
+const isStaffAdvisor = async (staffId) => {
+  try {
+    // Check if user has isAdvisor flag
+    const user = await User.findById(staffId);
+    if (user && user.isAdvisor) {
+      return true;
+    }
+
+    // Check if user is listed as advisor in any class
+    const classWithAdvisor = await Class.findOne({ advisors: staffId });
+    return !!classWithAdvisor;
+  } catch (error) {
+    console.error('Error checking advisor status:', error);
+    return false;
+  }
+};
+
+// @desc    Check if staff is advisor
+// @route   GET /api/staff/is-advisor
+exports.checkAdvisorStatus = async (req, res) => {
+  try {
+    const isAdvisor = await isStaffAdvisor(req.user.id);
+    res.json({ isAdvisor });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to check advisor status' });
+  }
+};
 
 // @desc    Get class students
 // @route   GET /api/staff/class-students

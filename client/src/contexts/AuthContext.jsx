@@ -18,7 +18,23 @@ export function AuthProvider({ children }) {
           const res = await axios.get('/auth/profile', {
             headers: { Authorization: `Bearer ${token}` }
           });
-          setUser(res.data);
+
+          let userData = res.data;
+
+          // Check advisor status for staff users
+          if (userData.role === 'staff') {
+            try {
+              const advisorRes = await axios.get('/staff/is-advisor', {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              userData.isAdvisor = advisorRes.data.isAdvisor;
+            } catch (advisorError) {
+              console.error('Failed to check advisor status:', advisorError);
+              userData.isAdvisor = false;
+            }
+          }
+
+          setUser(userData);
         }
       } catch (error) {
         console.error('Auth verification failed:', error);
@@ -50,16 +66,36 @@ export function AuthProvider({ children }) {
         const res = await axios.get('/auth/profile', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setUser(res.data);
+
+        let userData = res.data;
+
+        // Check advisor status for staff users
+        if (userData.role === 'staff') {
+          try {
+            const advisorRes = await axios.get('/staff/is-advisor', {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            userData.isAdvisor = advisorRes.data.isAdvisor;
+          } catch (advisorError) {
+            console.error('Failed to check advisor status:', advisorError);
+            userData.isAdvisor = false;
+          }
+        }
+
+        setUser(userData);
       }
     } catch (err) {
       console.error('Failed to refresh user:', err);
     }
   };
 
+  const updateUser = (userData) => {
+    setUser(userData);
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, token, loading, login, logout, refreshUser }}
+      value={{ user, token, loading, login, logout, refreshUser, updateUser }}
     >
       {!loading && children}
     </AuthContext.Provider>

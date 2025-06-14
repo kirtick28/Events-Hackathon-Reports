@@ -3,10 +3,12 @@ const router = express.Router();
 const {
   getClassStudents,
   verifyProofs,
-  getMentoredTeams
+  getMentoredTeams,
+  checkAdvisorStatus
 } = require('../controllers/staffController');
 const { authenticate, checkRole } = require('../middlewares/authMiddleware');
 
+router.get('/is-advisor', authenticate, checkRole('staff'), checkAdvisorStatus);
 router.get(
   '/class-students',
   authenticate,

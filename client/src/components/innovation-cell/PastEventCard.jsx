@@ -35,9 +35,7 @@ const PastEventCard = ({ event, onView }) => {
         </div>
 
         {/* Description */}
-        <p className="text-gray-600 mb-6 line-clamp-3">
-          {event.description}
-        </p>
+        <p className="text-gray-600 mb-6 line-clamp-3">{event.description}</p>
 
         {/* Info Grid */}
         <div className="grid grid-cols-2 gap-4 mb-6">
@@ -59,6 +57,13 @@ const PastEventCard = ({ event, onView }) => {
               {event.registrationCount || 0}
             </p>
           </div>
+        </div>
+
+        {/* Registration Status */}
+        <div className="mb-4">
+          <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+            Registration Closed
+          </span>
         </div>
 
         {/* Action Button */}

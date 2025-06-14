@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Tab } from '@headlessui/react';
 import { format, parseISO } from 'date-fns';
 import { motion } from 'framer-motion';
-import api from '../../../utils/api';
-import placeholderImage from '../../../assets/images/event-image.jpg';
-import { useAuth } from '../../../contexts/AuthContext';
+import api from '../../utils/api';
+import placeholderImage from '../../assets/images/event-image.jpg';
+import { useAuth } from '../../contexts/AuthContext';
 
 const EventDetails = () => {
   const { eventId } = useParams();
@@ -13,20 +13,12 @@ const EventDetails = () => {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const basePath = {
-    superadmin: '/super-admin',
-    principal: '/principal',
-    innovation: '/innovation-cell',
-    hod: '/hod',
-    staff: '/staff',
-    student: '/student'
-  }[user.role];
+
   useEffect(() => {
     const fetchEvent = async () => {
       try {
         const response = await api.get(`/events/${eventId}?_expand=department`);
         setEvent(response.data);
-        console.log(response.data);
       } catch (err) {
         console.error('Failed to fetch event:', err);
       } finally {
@@ -35,15 +27,6 @@ const EventDetails = () => {
     };
     fetchEvent();
   }, [eventId]);
-
-  const handleStatusChange = async (newStatus) => {
-    try {
-      await api.patch(`/events/request/${eventId}/${newStatus}`);
-      navigate(`${basePath}/events`);
-    } catch (err) {
-      console.error('Failed to update status:', err);
-    }
-  };
 
   const formatDate = (date) => format(parseISO(date), 'dd MMM yyyy, h:mm a');
 
@@ -74,100 +57,16 @@ const EventDetails = () => {
                   <span>{event.isOnline ? 'Online' : event.location}</span>
                 </div>
 
-                {/* Quick Actions moved here */}
+                {/* Action buttons moved to bottom-left */}
                 <div className="flex items-center gap-3">
-                  {event.status === 'pending' && (
-                    <>
-                      {user.role === 'innovation' ? (
-                        <>
-                          <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => handleStatusChange('approved')}
-                            className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-shadow"
-                          >
-                            Approve Event
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => handleStatusChange('rejected')}
-                            className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-shadow"
-                          >
-                            Reject Event
-                          </motion.button>
-                        </>
-                      ) : (
-                        <div className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-xl text-sm font-medium">
-                          Waiting for Innovation Cell Approval
-                        </div>
-                      )}
-                    </>
-                  )}
-
-                  {event.status === 'rejected' && (
-                    <>
-                      {user.role === 'innovation' ? (
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => handleStatusChange('approved')}
-                          className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-shadow"
-                        >
-                          Re-accept Event
-                        </motion.button>
-                      ) : (
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => handleStatusChange('pending')}
-                          className="px-4 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-shadow"
-                        >
-                          Re-apply for Verification
-                        </motion.button>
-                      )}
-                    </>
-                  )}
-
-                  {event.status === 'draft' && (
-                    <>
-                      <Link
-                        to={`${basePath}/events/${eventId}/edit`}
-                        className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-shadow"
-                      >
-                        Edit Draft
-                      </Link>
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => handleStatusChange('pending')}
-                        className="px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-shadow"
-                      >
-                        Submit for Approval
-                      </motion.button>
-                    </>
-                  )}
-
-                  {event.status === 'approved' && (
-                    <>
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-shadow"
-                      >
-                        View Registrations
-                      </motion.button>
-                      {(user.role === 'innovation' ||
-                        user._id === event.createdBy._id) && (
-                        <Link
-                          to={`${basePath}/events/${eventId}/edit`}
-                          className="px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-shadow"
-                        >
-                          Edit Event
-                        </Link>
-                      )}
-                    </>
-                  )}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => navigate('/staff/events')}
+                    className="px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-shadow"
+                  >
+                    Back to Events
+                  </motion.button>
                 </div>
               </div>
               <span

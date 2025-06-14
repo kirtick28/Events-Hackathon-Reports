@@ -1,5 +1,6 @@
 const Event = require('../models/Event');
 const Team = require('../models/Team');
+const User = require('../models/User');
 const Request = require('../models/Request');
 const PastParticipation = require('../models/PastParticipation');
 
@@ -22,6 +23,53 @@ exports.getEvents = async (req, res) => {
     res.json(events);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch events' });
+  }
+};
+
+// @desc    Get registration status for an event
+// @route   GET /api/students/registration-status/:eventId
+exports.getRegistrationStatus = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const userId = req.user.id;
+
+    // Check if user is in any team for this event
+    const team = await Team.findOne({
+      event: eventId,
+      'members.user': userId
+    }).populate('event', 'title');
+
+    if (team) {
+      const userMember = team.members.find((m) => m.user.equals(userId));
+      return res.json({
+        isRegistered: true,
+        teamId: team._id,
+        teamName: team.name,
+        memberStatus: userMember.status,
+        teamStatus: team.status
+      });
+    }
+
+    // Check if user is a mentor for any team in this event
+    const mentorTeam = await Team.findOne({
+      event: eventId,
+      'mentor.user': userId
+    }).populate('event', 'title');
+
+    if (mentorTeam) {
+      return res.json({
+        isRegistered: true,
+        teamId: mentorTeam._id,
+        teamName: mentorTeam.name,
+        role: 'mentor',
+        mentorStatus: mentorTeam.mentor.status,
+        teamStatus: mentorTeam.status
+      });
+    }
+
+    res.json({ isRegistered: false });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to check registration status' });
   }
 };
 

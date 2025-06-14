@@ -228,7 +228,27 @@ const eventSchema = new mongoose.Schema(
   }
 );
 
-// Virtuals remain the same
+// Add virtual property for event status
+eventSchema.virtual('eventStatus').get(function () {
+  const now = new Date();
+  if (now < this.startDate) return 'upcoming';
+  if (now <= this.endDate) return 'ongoing';
+  return 'completed';
+});
+
+// Add virtual property for registration status
+eventSchema.virtual('isRegistrationOpen').get(function () {
+  if (this.registrationStatus === 'closed') return false;
+  const now = new Date();
+  return now <= (this.registrationDeadline || this.startDate);
+});
+
+eventSchema.virtual('registrationStatus').get(function () {
+  const now = new Date();
+  const deadline = this.registrationDeadline || this.startDate;
+  return now <= deadline ? 'open' : 'closed';
+});
+
 eventSchema.virtual('isPast').get(function () {
   return this.endDate < new Date();
 });

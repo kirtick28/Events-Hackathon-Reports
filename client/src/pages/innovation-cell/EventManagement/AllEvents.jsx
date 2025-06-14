@@ -19,27 +19,20 @@ import PendingEventCard from '../../../components/innovation-cell/PendingEventCa
 import PastEventCard from '../../../components/innovation-cell/PastEventCard';
 import DraftEventCard from '../../../components/innovation-cell/DraftCard';
 
-
 const AllEvents = () => {
-  const [events, setEvents] = useState([]);
+  const [ongoingEvents, setOngoingEvents] = useState([]);
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [pastEvents, setPastEvents] = useState([]);
   const [drafts, setDrafts] = useState([]);
   const [pendingEvents, setPendingEvents] = useState([]);
   const [rejectedEvents, setRejectedEvents] = useState([]);
-  const [filter, setFilter] = useState('ongoing');
+  const [filter, setFilter] = useState('upcoming');
   const [searchTerm, setSearchTerm] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const fetchEvents = async () => {
-    try {
-      const response = await api.get('/events');
-      
-      setEvents(response.data);
-    } catch (err) {
-      console.error('Failed to fetch events:', err);
-    }
-  };
   const basePath = {
     superadmin: '/super-admin',
     principal: '/principal',
@@ -48,9 +41,35 @@ const AllEvents = () => {
     staff: '/staff',
     student: '/student'
   }[user.role];
-  
+
+  const fetchOngoingEvents = async () => {
+    try {
+      const response = await api.get('/events?category=ongoing');
+      setOngoingEvents(response.data);
+    } catch (err) {
+      console.error('Failed to fetch ongoing events:', err);
+    }
+  };
+
+  const fetchUpcomingEvents = async () => {
+    try {
+      const response = await api.get('/events?category=upcoming');
+      setUpcomingEvents(response.data);
+    } catch (err) {
+      console.error('Failed to fetch upcoming events:', err);
+    }
+  };
+
+  const fetchPastEvents = async () => {
+    try {
+      const response = await api.get('/events?category=past');
+      setPastEvents(response.data);
+    } catch (err) {
+      console.error('Failed to fetch past events:', err);
+    }
+  };
+
   const fetchDrafts = async () => {
-    
     try {
       const response = await api.get(`/events/drafts/${user._id}`);
       setDrafts(response.data);
@@ -61,9 +80,10 @@ const AllEvents = () => {
 
   const fetchPendingEvents = async () => {
     try {
-      const url = user.role === 'innovation' 
-        ? '/events?status=pending'
-        : `/events?status=pending&createdBy=${user._id}`;
+      const url =
+        user.role === 'innovation'
+          ? '/events?status=pending'
+          : `/events?status=pending&createdBy=${user._id}`;
       const response = await api.get(url);
       setPendingEvents(response.data);
     } catch (err) {
@@ -73,9 +93,10 @@ const AllEvents = () => {
 
   const fetchRejectedEvents = async () => {
     try {
-      const url = user.role === 'innovation'
-        ? '/events?status=rejected'
-        : `/events?status=rejected&createdBy=${user._id}`;
+      const url =
+        user.role === 'innovation'
+          ? '/events?status=rejected'
+          : `/events?status=rejected&createdBy=${user._id}`;
       const response = await api.get(url);
       setRejectedEvents(response.data);
     } catch (err) {
@@ -83,20 +104,40 @@ const AllEvents = () => {
     }
   };
 
+  const fetchAllData = async () => {
+    setLoading(true);
+    try {
+      await Promise.all([
+        fetchOngoingEvents(),
+        fetchUpcomingEvents(),
+        fetchPastEvents(),
+        fetchDrafts(),
+        fetchPendingEvents(),
+        fetchRejectedEvents()
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetchEvents();
-    fetchDrafts();
-    fetchPendingEvents();
-    fetchRejectedEvents();
+    fetchAllData();
   }, []);
 
   useEffect(() => {
+    // Refresh data when filter changes to ensure fresh data
     if (filter === 'draft') {
       fetchDrafts();
     } else if (filter === 'pending') {
       fetchPendingEvents();
     } else if (filter === 'rejected') {
       fetchRejectedEvents();
+    } else if (filter === 'ongoing') {
+      fetchOngoingEvents();
+    } else if (filter === 'upcoming') {
+      fetchUpcomingEvents();
+    } else if (filter === 'past') {
+      fetchPastEvents();
     }
   }, [filter]);
 
@@ -115,14 +156,11 @@ const AllEvents = () => {
   };
 
   const getFilteredEvents = () => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
     let filteredEvents = [];
 
     switch (filter) {
       case 'draft':
-        filteredEvents = drafts.filter((draft) => 
+        filteredEvents = drafts.filter((draft) =>
           draft.title?.toLowerCase().includes(searchTerm.toLowerCase())
         );
         break;
@@ -137,33 +175,31 @@ const AllEvents = () => {
         );
         break;
       case 'ongoing':
-        filteredEvents = events.filter((event) => {
-          const matchesSearch = event.title
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase());
-          const eventStart = new Date(event.startDate);
-          return matchesSearch && event.status === 'approved' && eventStart >= today;
-        });
+        filteredEvents = ongoingEvents.filter((event) =>
+          event.title?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        break;
+      case 'upcoming':
+        filteredEvents = upcomingEvents.filter((event) =>
+          event.title?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
         break;
       case 'past':
-        filteredEvents = events.filter((event) => {
-          const matchesSearch = event.title
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase());
-          const eventEnd = new Date(event.endDate);
-          return matchesSearch && event.status === 'approved' && eventEnd < today;
-        });
+        filteredEvents = pastEvents.filter((event) =>
+          event.title?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
         break;
       default:
-        filteredEvents = events;
+        filteredEvents = upcomingEvents;
     }
 
-    
     return filteredEvents;
   };
 
   const getTabIcon = (tab) => {
     switch (tab) {
+      case 'upcoming':
+        return <CalendarIcon className="w-4 h-4" />;
       case 'ongoing':
         return <ClockIcon className="w-4 h-4" />;
       case 'draft':
@@ -178,6 +214,17 @@ const AllEvents = () => {
         return null;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading events...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6">
@@ -215,22 +262,24 @@ const AllEvents = () => {
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-wrap gap-2 bg-white rounded-2xl p-2 shadow-lg"
         >
-          {['ongoing', 'draft', 'pending', 'past', 'rejected'].map((tab) => (
-            <motion.button
-              key={tab}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setFilter(tab)}
-              className={`px-6 py-3 rounded-xl flex items-center gap-2 transition-all ${
-                filter === tab
-                  ? 'bg-gradient-to-r from-yellow-500 to-blue-500 text-white shadow-md'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              {getTabIcon(tab)}
-              {tab.charAt(0).toUpperCase() + tab.slice(1)} Events
-            </motion.button>
-          ))}
+          {['upcoming', 'ongoing', 'draft', 'pending', 'past', 'rejected'].map(
+            (tab) => (
+              <motion.button
+                key={tab}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setFilter(tab)}
+                className={`px-6 py-3 rounded-xl flex items-center gap-2 transition-all ${
+                  filter === tab
+                    ? 'bg-gradient-to-r from-yellow-500 to-blue-500 text-white shadow-md'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                {getTabIcon(tab)}
+                {tab.charAt(0).toUpperCase() + tab.slice(1)} Events
+              </motion.button>
+            )
+          )}
         </motion.div>
 
         {/* Events Grid */}
@@ -251,7 +300,9 @@ const AllEvents = () => {
                       key={event._id}
                       event={event}
                       onDelete={() => handleDeleteDraft(event._id)}
-                      onEdit={() => navigate(`${basePath}/events/${event._id}/edit`)}
+                      onEdit={() =>
+                        navigate(`${basePath}/events/${event._id}/edit`)
+                      }
                     />
                   );
                 case 'pending':
@@ -276,7 +327,9 @@ const AllEvents = () => {
                       key={event._id}
                       event={event}
                       onView={() => navigate(`${basePath}/events/${event._id}`)}
-                      onEdit={() => navigate(`${basePath}/events/${event._id}/edit`)}
+                      onEdit={() =>
+                        navigate(`${basePath}/events/${event._id}/edit`)
+                      }
                     />
                   );
               }
@@ -294,9 +347,7 @@ const AllEvents = () => {
             <div className="max-w-md mx-auto">
               <DocumentTextIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                {filter === 'draft'
-                  ? 'No Draft Events'
-                  : 'No Events Found'}
+                {filter === 'draft' ? 'No Draft Events' : 'No Events Found'}
               </h3>
               <p className="text-gray-600">
                 {filter === 'draft'

@@ -12,7 +12,16 @@ const userSchema = new mongoose.Schema({
   department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department' },
   class: { type: mongoose.Schema.Types.ObjectId, ref: 'Class' },
   year: { type: Number },
+  rollNumber: { type: String },
+  bio: { type: String },
+  skills: { type: String },
+  interests: { type: String },
+  achievements: { type: String },
+  qualification: { type: String },
+  experience: { type: Number },
+  specialization: { type: String },
   isActive: { type: Boolean, default: true },
+  isAdvisor: { type: Boolean, default: false },
   resetToken: { type: String },
   resetTokenExpiration: { type: Date }
 });

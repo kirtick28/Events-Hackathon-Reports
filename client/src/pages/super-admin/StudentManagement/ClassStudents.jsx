@@ -275,24 +275,202 @@ const ClassStudents = () => {
           </motion.div>
         </AnimatePresence>
 
-        {/* Modals - Only rendered if user has permission */}
+        {/* Create/Edit Student Modal */}
         {showCreateModal && user.role !== 'staff' && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
           >
-            {/* ... (keep existing modal content unchanged) */}
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-white rounded-2xl p-8 w-full max-w-2xl shadow-xl space-y-6"
+            >
+              <h2 className="text-2xl font-semibold text-gray-900">
+                {editingStudent ? 'Edit Student' : 'Create New Student'}
+              </h2>
+
+              <div className="space-y-4">
+                {/* Full Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    value={newStudent.name}
+                    onChange={(e) =>
+                      setNewStudent({ ...newStudent, name: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 bg-white shadow-sm text-sm"
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={newStudent.email}
+                    onChange={(e) =>
+                      setNewStudent({ ...newStudent, email: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 bg-white shadow-sm text-sm"
+                  />
+                </div>
+
+                {/* Role */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Role
+                  </label>
+                  <select
+                    value={newStudent.role}
+                    onChange={(e) =>
+                      setNewStudent({ ...newStudent, role: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 bg-white shadow-sm text-sm"
+                  >
+                    <option value="student">Student</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                {editingStudent && (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleDeleteStudent(editingStudent._id)}
+                    className="px-4 py-2 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors shadow-sm"
+                  >
+                    Delete Student
+                  </motion.button>
+                )}
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setEditingStudent(null);
+                    setNewStudent({
+                      name: '',
+                      email: '',
+                      department: deptId,
+                      class: classId,
+                      role: 'student'
+                    });
+                  }}
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-xl hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleSubmitStudent}
+                  className="px-4 py-2 bg-gradient-to-r from-yellow-500 to-blue-500 text-white rounded-xl font-medium hover:shadow-lg transition-shadow"
+                >
+                  {editingStudent ? 'Update Student' : 'Create Student'}
+                </motion.button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
 
+        {/* Bulk Import Modal */}
         {showBulkModal && user.role !== 'staff' && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
           >
-            {/* ... (keep existing bulk modal content unchanged) */}
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-white rounded-2xl p-8 w-full max-w-2xl shadow-xl space-y-6"
+            >
+              <h2 className="text-2xl font-semibold text-gray-900">
+                Bulk Import Students
+              </h2>
+
+              <div className="space-y-4">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <strong>File requirements:</strong>
+                    <br />
+                    - Excel file (.xlsx, .xls, .csv)
+                    <br />
+                    - Two columns: "name" and "email" (first row as header)
+                    <br />- All students will be added to current class
+                  </p>
+                </div>
+
+                {/* Role Selector */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Role
+                  </label>
+                  <select
+                    value={newStudent.role}
+                    onChange={(e) =>
+                      setNewStudent({ ...newStudent, role: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 bg-white shadow-sm text-sm"
+                  >
+                    <option value="student">Student</option>
+                  </select>
+                </div>
+
+                {/* File Input */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Upload Excel File
+                  </label>
+                  <input
+                    type="file"
+                    accept=".xlsx, .xls, .csv"
+                    onChange={handleFileSelect}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 bg-white shadow-sm text-sm"
+                  />
+                  {selectedFile && (
+                    <p className="mt-2 text-sm text-gray-600">
+                      Selected file: {selectedFile.name}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    setShowBulkModal(false);
+                    setSelectedFile(null);
+                  }}
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-xl hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleBulkImport}
+                  disabled={!selectedFile || isImporting}
+                  className={`px-4 py-2 rounded-xl font-medium transition-colors shadow-sm ${
+                    !selectedFile || isImporting
+                      ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-yellow-500 to-blue-500 text-white hover:shadow-lg'
+                  }`}
+                >
+                  {isImporting ? 'Importing...' : 'Import Students'}
+                </motion.button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </div>

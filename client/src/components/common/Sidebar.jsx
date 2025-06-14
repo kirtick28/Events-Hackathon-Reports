@@ -8,8 +8,10 @@ import {
   UserCircleIcon,
   ArrowRightOnRectangleIcon,
   CalendarIcon,
+  UserGroupIcon,
   ClipboardDocumentListIcon,
   CheckCircleIcon,
+  DocumentTextIcon,
   ChartBarIcon,
   BellIcon
 } from '@heroicons/react/24/outline';
@@ -29,14 +31,13 @@ const roleConfig = {
       icon: BriefcaseIcon
     }
   ],
+  principal: [
+    { name: 'Dashboard', path: '/principal/dashboard', icon: HomeIcon },
+    { name: 'Reports', path: '/principal/reports', icon: DocumentTextIcon }
+  ],
   innovation: [
     { name: 'Dashboard', path: '/innovation-cell/dashboard', icon: HomeIcon },
     { name: 'Events', path: '/innovation-cell/events', icon: CalendarIcon },
-    {
-      name: 'Team Approvals',
-      path: '/innovation-cell/team/approvals',
-      icon: CheckCircleIcon
-    },
     {
       name: 'Student Management',
       path: '/innovation-cell/students',
@@ -51,11 +52,6 @@ const roleConfig = {
       name: 'Reports',
       path: '/innovation-cell/reports',
       icon: ChartBarIcon
-    },
-    {
-      name: 'Notifications',
-      path: '/innovation-cell/notifications',
-      icon: BellIcon
     }
   ],
   hod: [
@@ -76,9 +72,29 @@ const roleConfig = {
     { name: 'Dashboard', path: '/staff/dashboard', icon: HomeIcon },
     { name: 'Events', path: '/staff/events', icon: CalendarIcon },
     {
+      name: 'Mentored Teams',
+      path: '/staff/mentored-teams',
+      icon: UserGroupIcon
+    },
+    {
       name: 'Student Management',
       path: '/staff/students/:deptId/:classId',
       icon: UsersIcon
+    }
+  ],
+  student: [
+    { name: 'Dashboard', path: '/student/dashboard', icon: HomeIcon },
+    { name: 'Events', path: '/student/events', icon: CalendarIcon },
+    { name: 'Manage Teams', path: '/student/teams', icon: UserGroupIcon },
+    {
+      name: 'Submit Proofs',
+      path: '/student/proofs',
+      icon: ClipboardDocumentListIcon
+    },
+    {
+      name: 'Past Participations',
+      path: '/student/past-participations',
+      icon: ChartBarIcon
     }
   ]
 };
@@ -100,9 +116,14 @@ const Sidebar = ({ role }) => {
 
   let navItems = [...(roleConfig[role] || [])];
 
-  // Special handling for staff role - remove Student Management if not advisor
+  // Special handling for staff role - filter based on advisor status
   if (role === 'staff') {
     navItems = navItems.filter((item) => {
+      // Remove Dashboard if not advisor
+      if (item.path === '/staff/dashboard' && !user?.isAdvisor) {
+        return false;
+      }
+      // Remove Student Management if not advisor
       if (item.path.includes(':deptId') && item.path.includes(':classId')) {
         return !!classId; // only include if classId exists
       }
